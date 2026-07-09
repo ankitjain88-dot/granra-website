@@ -3,199 +3,369 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Granra — WhatsApp scheduling that lives in your Google Sheet</title>
-<meta name="description" content="Schedule WhatsApp Business messages ahead of time, and let your Google Sheet be your CRM — no extra software to learn, no monthly per-contact fees.">
+<title>Granra — WhatsApp Automation for Google Sheets & Excel</title>
+<meta name="description" content="Connect your own WhatsApp Business Cloud API directly to your spreadsheets. 0% vendor markup and true offline scheduling — you keep your own direct relationship with Meta.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  :root{
-    --bg:#0a0f0d;
-    --surface:#111a16;
-    --surface2:#16211c;
-    --border:rgba(255,255,255,0.08);
-    --green:#25d366;
-    --green-dim:#1a4a2a;
-    --text:#eaf3ee;
-    --text2:#a9beb4;
-    --text3:#6f8579;
+  :root {
+    --bg: #070b11;
+    --surface: #0e1520;
+    --surface2: #141f2e;
+    --border: rgba(255,255,255,0.06);
+    --blue: #0a84ff;
+    --blue-glow: rgba(10,132,255,0.15);
+    --green: #0bd38a;
+    --green-glow: rgba(11,211,138,0.12);
+    --text: #f0f5f3;
+    --text2: #94a9be;
+    --text3: #586f84;
   }
-  *{box-sizing:border-box;margin:0;padding:0}
-  html{scroll-behavior:smooth}
-  body{
-    background:var(--bg);
-    color:var(--text);
-    font-family:'Inter',sans-serif;
-    line-height:1.6;
-    -webkit-font-smoothing:antialiased;
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
   }
-  h1,h2,h3,.display{font-family:'Space Grotesk',sans-serif}
-  a{color:inherit}
-  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  h1, h2, h3, h4, .display { font-family: 'Space Grotesk', sans-serif; }
+  a { text-decoration: none; color: inherit; }
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
 
-  /* ── Nav ── */
-  header{position:sticky;top:0;z-index:10;background:rgba(10,15,13,0.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--border)}
-  nav{display:flex;align-items:center;justify-content:space-between;padding:18px 0}
-  .logo{display:flex;align-items:center;gap:9px;font-weight:700;font-size:17px;letter-spacing:-0.02em}
-  .logo-mark{width:26px;height:26px;border-radius:8px;background:var(--green);display:flex;align-items:center;justify-content:center;color:#04160c;font-weight:700;font-size:14px}
-  nav .links{display:flex;gap:32px;font-size:14px;color:var(--text2)}
-  nav .links a:hover{color:var(--text)}
-  .btn{display:inline-flex;align-items:center;gap:6px;background:var(--green);color:#04160c;font-weight:600;font-size:14px;padding:10px 18px;border-radius:8px;text-decoration:none;border:none;cursor:pointer}
-  .btn-ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(7,11,17,0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+  }
+  nav { display: flex; align-items: center; justify-content: space-between; padding: 16px 0; }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: -0.03em; }
+  .logo-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: linear-gradient(135deg, var(--blue), var(--green));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 16px;
+  }
+  nav .links { display: flex; gap: 32px; font-size: 14px; color: var(--text2); font-weight: 500; }
+  nav .links a:hover { color: var(--text); }
 
-  /* ── Hero ── */
-  .hero{padding:88px 0 64px;display:grid;grid-template-columns:1.1fr 1fr;gap:56px;align-items:center}
-  .eyebrow{display:inline-flex;align-items:center;gap:8px;font-size:12px;color:var(--green);background:rgba(37,211,102,0.1);border:1px solid rgba(37,211,102,0.25);padding:6px 12px;border-radius:20px;margin-bottom:22px;font-weight:500}
-  .eyebrow::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green)}
-  h1{font-size:46px;line-height:1.08;letter-spacing:-0.02em;font-weight:700;margin-bottom:20px}
-  h1 .accent{color:var(--green)}
-  .hero p.sub{font-size:17px;color:var(--text2);max-width:480px;margin-bottom:32px}
-  .hero-ctas{display:flex;gap:14px;margin-bottom:28px}
-  .hero-note{font-size:13px;color:var(--text3)}
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--blue);
+    color: #fff;
+    font-weight: 600;
+    font-size: 14px;
+    padding: 12px 22px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px var(--blue-glow); }
+  .btn-green { background: var(--green); color: #04160c; }
+  .btn-green:hover { box-shadow: 0 4px 12px var(--green-glow); }
+  .btn-ghost { background: transparent; border: 1px solid var(--border); color: var(--text2); }
+  .btn-ghost:hover { color: var(--text); border-color: var(--text3); }
 
-  /* Signature element: a vertical timeline of scheduled message bubbles */
-  .timeline{position:relative;padding-left:28px}
-  .timeline::before{content:'';position:absolute;left:8px;top:6px;bottom:6px;width:2px;background:linear-gradient(var(--green),transparent 92%);opacity:0.4}
-  .t-item{position:relative;margin-bottom:22px;animation:fadeUp 0.6s ease both}
-  .t-item:nth-child(1){animation-delay:0.05s}
-  .t-item:nth-child(2){animation-delay:0.18s}
-  .t-item:nth-child(3){animation-delay:0.31s}
-  .t-item::before{content:'';position:absolute;left:-28px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px rgba(37,211,102,0.15)}
-  .t-time{font-size:11px;color:var(--text3);margin-bottom:6px;font-variant-numeric:tabular-nums}
-  .bubble{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:13.5px;color:#dcece3;max-width:320px}
-  .bubble .to{font-size:11px;color:var(--green);margin-bottom:4px;font-weight:600}
-  @keyframes fadeUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-  @media (prefers-reduced-motion:reduce){.t-item{animation:none;opacity:1}}
+  .scarcity-bar {
+    background: linear-gradient(90deg, rgba(10,132,255,0.15), rgba(11,211,138,0.15));
+    border-bottom: 1px solid var(--border);
+    padding: 10px 0;
+    text-align: center;
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+  .scarcity-bar strong { color: var(--green); }
 
-  /* ── Sections ── */
-  section{padding:72px 0}
-  .section-head{max-width:560px;margin:0 auto 48px;text-align:center}
-  .section-head .eyebrow{margin-bottom:14px}
-  .section-head h2{font-size:32px;letter-spacing:-0.02em;margin-bottom:12px}
-  .section-head p{color:var(--text2);font-size:15.5px}
+  .hero { padding: 80px 0; display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 48px; align-items: center; }
+  .eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: var(--blue);
+    background: var(--blue-glow);
+    border: 1px solid rgba(10,132,255,0.25);
+    padding: 6px 14px;
+    border-radius: 30px;
+    margin-bottom: 20px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+  }
+  h1 { font-size: 48px; line-height: 1.1; letter-spacing: -0.03em; font-weight: 700; margin-bottom: 24px; }
+  h1 span { color: var(--green); }
+  .hero p.sub { font-size: 17px; color: var(--text2); margin-bottom: 36px; max-width: 520px; }
+  .hero-ctas { display: flex; gap: 16px; margin-bottom: 24px; }
+  .hero-badge { font-size: 12.5px; color: var(--text3); display: flex; gap: 16px; }
+  .hero-badge span { display: flex; align-items: center; gap: 5px; }
 
-  .features{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
-  .feature{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:26px}
-  .feature .ico{width:38px;height:38px;border-radius:9px;background:var(--green-dim);color:var(--green);display:flex;align-items:center;justify-content:center;font-size:17px;margin-bottom:16px}
-  .feature h3{font-size:16.5px;margin-bottom:8px}
-  .feature p{font-size:13.5px;color:var(--text2)}
+  .timeline { position: relative; padding-left: 32px; }
+  .timeline::before { content: ''; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 2px; background: linear-gradient(var(--blue), transparent); }
+  .t-item { position: relative; margin-bottom: 24px; }
+  .t-item::before { content: ''; position: absolute; left: -28px; top: 6px; width: 10px; height: 10px; border-radius: 50%; background: var(--blue); box-shadow: 0 0 0 5px rgba(10,132,255,0.15); }
+  .t-time { font-size: 11px; color: var(--text3); font-weight: 600; text-transform: uppercase; margin-bottom: 6px; }
+  .bubble { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; font-size: 14px; color: var(--text); }
+  .bubble .meta-tag { font-size: 11px; color: var(--blue); font-weight: 700; text-transform: uppercase; margin-bottom: 4px; }
 
-  .headline-feature{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:44px;display:grid;grid-template-columns:1fr 1fr;gap:36px;align-items:center;margin-top:52px}
-  .headline-feature .tag{font-size:11px;color:var(--green);font-weight:600;letter-spacing:0.06em;text-transform:uppercase;margin-bottom:10px}
-  .headline-feature h3{font-size:24px;margin-bottom:12px;letter-spacing:-0.01em}
-  .headline-feature p{color:var(--text2);font-size:14.5px}
-  .sheet-mock{background:var(--bg);border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:11.5px}
-  .sheet-mock .row{display:grid;grid-template-columns:1.2fr 1fr 1fr 1fr;border-bottom:1px solid var(--border)}
-  .sheet-mock .row>div{padding:9px 10px;border-right:1px solid var(--border)}
-  .sheet-mock .row>div:last-child{border-right:none}
-  .sheet-mock .head{background:var(--surface2);color:var(--text2);font-weight:600}
-  .sheet-mock .status{color:var(--green);font-weight:600}
+  .matrix-section { background: var(--surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); padding: 80px 0; }
+  .matrix-table { width: 100%; border-collapse: collapse; margin-top: 32px; }
+  .matrix-table th, .matrix-table td { padding: 16px; text-align: left; border-bottom: 1px solid var(--border); font-size: 14.5px; }
+  .matrix-table th { font-weight: 700; color: var(--text); background: var(--surface2); }
+  .matrix-table td strong { color: var(--text); }
+  .badge-edge { background: rgba(11,211,138,0.1); color: var(--green); padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .badge-risk { background: rgba(224,92,92,0.1); color: #e05c5c; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+  .matrix-note { font-size: 12px; color: var(--text3); margin-top: 12px; }
 
-  .pricing-card{max-width:400px;margin:0 auto;background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:36px;text-align:center}
-  .price{font-size:44px;font-weight:700;font-family:'Space Grotesk',sans-serif;margin:14px 0 4px}
-  .price span{font-size:16px;color:var(--text3);font-weight:500}
-  .pricing-card .note{font-size:13px;color:var(--text3);margin-bottom:24px}
-  .plist{text-align:left;list-style:none;margin-bottom:28px}
-  .plist li{display:flex;gap:10px;padding:8px 0;font-size:14px;color:var(--text2);border-bottom:1px solid var(--border)}
-  .plist li:last-child{border-bottom:none}
-  .plist li::before{content:'✓';color:var(--green);font-weight:700}
+  .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 40px; }
+  .f-card { background: var(--surface); border: 1px solid var(--border); padding: 32px; border-radius: 16px; }
+  .f-card .icon { font-size: 24px; margin-bottom: 16px; color: var(--blue); }
+  .f-card h3 { font-size: 18px; margin-bottom: 10px; }
+  .f-card p { font-size: 14px; color: var(--text2); }
 
-  footer{border-top:1px solid var(--border);padding:40px 0;margin-top:40px}
-  .foot-grid{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:24px}
-  .foot-links{display:flex;gap:24px;font-size:13.5px;color:var(--text2)}
-  .foot-links a:hover{color:var(--text)}
-  .foot-bottom{margin-top:28px;padding-top:20px;border-top:1px solid var(--border);font-size:12.5px;color:var(--text3);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+  .showcase-block { display: grid; grid-template-columns: 1fr 1.1fr; gap: 48px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 48px; margin-top: 64px; align-items: center; }
+  .showcase-block h3 { font-size: 28px; margin-bottom: 16px; letter-spacing: -0.01em; }
+  .showcase-block p { color: var(--text2); font-size: 15px; margin-bottom: 20px; }
+  .sheet-ui { background: var(--bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; font-size: 12px; }
+  .sheet-ui .sheet-row { display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; border-bottom: 1px solid var(--border); }
+  .sheet-ui .sheet-row.header { background: var(--surface2); font-weight: 600; color: var(--text2); }
+  .sheet-ui .sheet-row div { padding: 12px; border-right: 1px solid var(--border); }
+  .sheet-ui .sheet-row div:last-child { border-right: none; }
+  .sheet-status { color: var(--green); font-weight: 700; background: rgba(11,211,138,0.05); text-align:center; border-radius:4px; padding: 2px 6px; }
 
-  @media (max-width:860px){
-    .hero{grid-template-columns:1fr;padding-top:56px}
-    h1{font-size:34px}
-    .features{grid-template-columns:1fr}
-    .headline-feature{grid-template-columns:1fr;padding:28px}
-    nav .links{display:none}
+  .calc-container { background: var(--surface); border: 1px solid var(--border); border-radius: 20px; padding: 40px; margin-top: 64px; display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 40px; }
+  .calc-slider-box label { font-size: 14px; color: var(--text2); font-weight: 600; display: block; margin-bottom: 12px; }
+  .calc-slider { -webkit-appearance: none; width: 100%; height: 6px; background: var(--surface2); border-radius: 10px; outline: none; margin-bottom: 24px; }
+  .calc-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: var(--blue); cursor: pointer; }
+  .calc-results { background: var(--surface2); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; justify-content: center; text-align: center; border: 1px solid var(--border); }
+  .calc-metrics { font-size: 32px; font-weight: 700; color: #fff; margin: 8px 0; }
+  .calc-savings { color: var(--green); font-weight: 600; font-size: 14px; background: rgba(11,211,138,0.08); padding: 6px 12px; border-radius: 6px; display: inline-block; margin-top: 10px; }
+  .calc-caveat { font-size: 11px; color: var(--text3); margin-top: 16px; }
+
+  .pricing-layouts { display: grid; grid-template-columns: 1fr 1.1fr 1fr; gap: 20px; margin-top: 48px; align-items: center; }
+  .p-card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 32px; text-align: center; position: relative; }
+  .p-card.featured { border: 2px solid var(--blue); background: var(--surface2); transform: scale(1.03); }
+  .p-card .badge-featured { position: absolute; top: -14px; left: 50%; transform: translateX(-50%); background: var(--blue); color: #fff; font-size: 11px; padding: 4px 12px; border-radius: 20px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+  .p-card .tier-title { font-size: 14px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text2); font-weight: 600; }
+  .p-card .cost { font-size: 40px; font-weight: 700; margin: 16px 0 8px; color: var(--text); }
+  .p-card .cost span { font-size: 15px; color: var(--text3); font-weight: 500; }
+  .p-features { list-style: none; text-align: left; margin: 24px 0; font-size: 13.5px; color: var(--text2); }
+  .p-features li { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); display: flex; gap: 8px; align-items: center; }
+  .p-features li::before { content: '✓'; color: var(--green); font-weight: 700; }
+
+  footer { border-top: 1px solid var(--border); padding: 48px 0; margin-top: 80px; font-size: 13.5px; color: var(--text3); }
+  .foot-wrap { display: flex; justify-content: space-between; align-items: center; }
+  .foot-links { display: flex; gap: 24px; color: var(--text2); }
+  .foot-links a:hover { color: var(--text); }
+
+  @media (max-width: 960px) {
+    .hero, .showcase-block, .pricing-layouts, .calc-container { grid-template-columns: 1fr; transform: none; }
+    .p-card.featured { transform: none; }
+    .features-grid { grid-template-columns: 1fr; }
+    nav .links { display: none; }
+    div[style*="grid-template-columns: 1fr 1fr"] { grid-template-columns: 1fr !important; }
   }
 </style>
 </head>
 <body>
 
+<div class="scarcity-bar">
+  🔥 <strong>Introductory Offer:</strong> Limited to the first 250 customers — secure 4 years of access before standard pricing returns.
+</div>
+
 <header>
   <div class="wrap">
     <nav>
-      <div class="logo"><span class="logo-mark">G</span> Granra</div>
+      <div class="logo"><img src="granra-logo.png" alt="Granra" style="height:36px;"></div>
       <div class="links">
+        <a href="#matrix">The API Edge</a>
         <a href="#features">Features</a>
-        <a href="#sheets">Google Sheets CRM</a>
+        <a href="#sheets">Spreadsheet CRM</a>
+        <a href="#calculator">Savings Estimate</a>
         <a href="#pricing">Pricing</a>
       </div>
-      <a class="btn" href="mailto:hello@example.com">Get in touch</a>
+      <a class="btn" href="#pricing">Claim License</a>
     </nav>
   </div>
 </header>
 
 <div class="wrap">
-  <section class="hero" style="padding-bottom:0">
+  <section class="hero">
     <div>
-      <div class="eyebrow">Built for WhatsApp Business API</div>
-      <h1>Schedule WhatsApp messages that send themselves — <span class="accent">from a sheet you already keep.</span></h1>
-      <p class="sub">Granra connects to your own WhatsApp Business account and your Google Sheet, so reminders, follow-ups, and updates go out on time — without another dashboard to learn.</p>
+      <div class="eyebrow">Direct WhatsApp Business Cloud API Architecture</div>
+      <h1>True Offline WhatsApp Scheduling — <span>Directly From Your Spreadsheet.</span></h1>
+      <p class="sub">Connect your own Meta developer keys straight to your rows. Granra executes personalized workflows, fee reminders, and customer updates on time — even if your computer is completely turned off.</p>
       <div class="hero-ctas">
-        <a class="btn" href="#pricing">See pricing</a>
-        <a class="btn btn-ghost" href="#features">How it works</a>
+        <a class="btn btn-green" href="#pricing">View Launch Plans</a>
+        <a class="btn btn-ghost" href="#matrix">Compare Alternatives</a>
       </div>
-      <div class="hero-note">Connect your own WhatsApp Business account · No per-message markup</div>
+      <div class="hero-badge">
+        <span>🔒 0% Vendor Markup</span>
+        <span>🚀 True Server-Side Background Runs</span>
+      </div>
     </div>
     <div class="timeline">
       <div class="t-item">
-        <div class="t-time">Today, 9:00 AM</div>
-        <div class="bubble"><div class="to">To Priya — outstanding_dues</div>Dear Priya, your outstanding balance of ₹4,500 is due on 12 July. Kindly clear at the earliest.</div>
+        <div class="t-time">Every Mon, 9:00 AM (Background Cloud Task)</div>
+        <div class="bubble"><div class="meta-tag">Utility Alert — outstanding_dues</div>Hi Priya, your document collection balance of ₹4,500 is due on 12 July. Please tap reply below to upload.</div>
       </div>
       <div class="t-item">
-        <div class="t-time">Today, 11:30 AM</div>
-        <div class="bubble"><div class="to">To Rohit — appointment_reminder</div>Hi Rohit, this is a reminder for your appointment tomorrow at 4:00 PM.</div>
-      </div>
-      <div class="t-item">
-        <div class="t-time">Tomorrow, 10:00 AM</div>
-        <div class="bubble"><div class="to">To Meena — gst_filing_reminder</div>Hello Meena, please share your GST documents for this month at your earliest convenience.</div>
+        <div class="t-time">Automated Cron Execution</div>
+        <div class="bubble"><div class="meta-tag">Retention Ping — account_renewal</div>Hello Rahul, your membership plan expires in 4 days. Click [Renew Pass] to clear outstanding fees immediately.</div>
       </div>
     </div>
   </section>
 </div>
 
+<section class="matrix-section" id="matrix">
+  <div class="wrap">
+    <div style="text-align: center; max-width: 620px; margin: 0 auto 32px;">
+      <h2>Engineered for Business. Bypassing Hidden Fees.</h2>
+      <p style="color: var(--text2); font-size: 15px; margin-top: 8px;">See why growing firms choose direct-to-Meta connections over margin-heavy platforms or fragile browser extensions.</p>
+    </div>
+    <table class="matrix-table">
+      <thead>
+        <tr>
+          <th>Operational Feature Set</th>
+          <th>Granra Engine</th>
+          <th>WATI / AiSensy Aggregators</th>
+          <th>Chrome Extension Schedulers</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Messaging Vendor Markup</strong></td>
+          <td><span class="badge-edge">0% Markup — Pure BYOK</span> Pay wholesale rates to Meta.</td>
+          <td><span class="badge-risk">Markup Added</span> Commonly charge a subscription plus a per-message markup on top of Meta's own rates.</td>
+          <td>No API costs, but heavily throttled daily limits.</td>
+        </tr>
+        <tr>
+          <td><strong>True Offline Running</strong></td>
+          <td><span class="badge-edge">Server-Side Cloud Core</span> Works with computer closed.</td>
+          <td>Cloud-native, but locked behind credit balances.</td>
+          <td><span class="badge-risk">Browser Bound</span> Freezes if browser tabs close.</td>
+        </tr>
+        <tr>
+          <td><strong>Wallet Pre-payment Lock</strong></td>
+          <td><strong>None.</strong> Direct card fallback inside Meta account.</td>
+          <td><span class="badge-risk">Mandatory Prepaid Credits</span> Cash locked inside vendor wallet.</td>
+          <td>None. Run entirely on local numbers.</td>
+        </tr>
+        <tr>
+          <td><strong>Seat / Sub-user Overheads</strong></td>
+          <td><strong>4 Users Included</strong> Simple add-on tiers beyond that.</td>
+          <td><span class="badge-risk">Extra-seat pricing scales quickly</span> with team size.</td>
+          <td>Single-device login tracking only.</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="matrix-note">Competitor details reflect publicly available pricing information as of 2026 and may change — always confirm current terms directly with each provider.</div>
+  </div>
+</section>
+
 <div class="wrap">
   <section id="features">
-    <div class="section-head">
-      <div class="eyebrow">Why teams switch</div>
-      <h2>Everything a small business needs to stay on top of WhatsApp</h2>
-      <p>No new CRM to adopt, no complicated setup — just scheduling and structure on top of tools you already use.</p>
+    <div style="text-align: center; max-width: 580px; margin: 0 auto 48px;">
+      <div class="eyebrow">Core Capabilities</div>
+      <h2>Automate Workflows Without Data Lock-in</h2>
+      <p style="color: var(--text2); font-size: 15px;">Zero customer records to migrate. Retain total ownership of your communication pipeline with complete cloud stability.</p>
     </div>
-    <div class="features">
-      <div class="feature">
-        <div class="ico">⏱</div>
-        <h3>Schedule ahead</h3>
-        <p>Queue up reminders, follow-ups, and announcements for exactly when they should go out — once, or on a repeating basis.</p>
+
+    <div class="features-grid">
+      <div class="f-card">
+        <div class="icon">⏱</div>
+        <h3>Dynamic Cron Execution</h3>
+        <p>Queue up critical client alerts, fee requests, or retention campaigns for precise execution cycles — single blast or custom recurring intervals.</p>
       </div>
-      <div class="feature">
-        <div class="ico">📄</div>
-        <h3>Sheets-powered templates</h3>
-        <p>Fill approved WhatsApp templates directly from rows in your Google Sheet — names, amounts, dates, all pulled in automatically.</p>
+      <div class="f-card">
+        <div class="icon">🔗</div>
+        <h3>Variable Mapping Wizard</h3>
+        <p>Interpolate parameters like names, values, and custom headings (*Expiry*, *Dues*) into pre-approved templates without changing your sheet.</p>
       </div>
-      <div class="feature">
-        <div class="ico">✓</div>
-        <h3>Delivery status, logged</h3>
-        <p>See what sent, what delivered, and what failed — written back into your sheet, no separate dashboard required.</p>
+      <div class="f-card">
+        <div class="icon">📝</div>
+        <h3>Bi-Directional Cell Updates</h3>
+        <p>Monitor transaction processing results natively. Delivery confirmations and read statuses write back directly into your specific spreadsheet cells.</p>
       </div>
     </div>
 
-    <div class="headline-feature" id="sheets">
+    <div class="showcase-block" id="sheets">
       <div>
-        <div class="tag">The headline feature</div>
-        <h3>Your Google Sheet is the CRM. We just plug into it.</h3>
-        <p>Most WhatsApp tools ask you to migrate your contacts into yet another system. Granra reads your existing Google Sheet, fills WhatsApp templates from it, and writes the send status straight back — so your sheet stays the single source of truth, not one more thing to keep in sync.</p>
+        <div style="font-size: 11px; color: var(--blue); font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 8px;">Flexible Data Source</div>
+        <h3>Your Current Sheet is Your Complete CRM.</h3>
+        <p>Do not waste valuable business hours teaching your staff a complicated third-party application dashboard. Granra links directly into your operational Google Sheets or local Microsoft Excel files, executing bulk outbound flows and mapping response logs back instantly.</p>
       </div>
-      <div class="sheet-mock">
-        <div class="row head"><div>Name</div><div>Phone</div><div>Amount Due</div><div>Send Status</div></div>
-        <div class="row"><div>Priya Sharma</div><div>+9198…</div><div>₹4,500</div><div class="status">sent</div></div>
-        <div class="row"><div>Rohit Verma</div><div>+9187…</div><div>₹2,100</div><div class="status">sent</div></div>
-        <div class="row"><div>Meena Iyer</div><div>+9170…</div><div>—</div><div style="color:var(--text3)">scheduled</div></div>
+      <div class="sheet-ui">
+        <div class="sheet-row header"><div>Identifier</div><div>Phone ID</div><div>Variable Target</div><div>API Processing Log</div></div>
+        <div class="sheet-row"><div>Priya Sharma</div><div>+919876…</div><div>₹4,500</div><div><span class="sheet-status">delivered</span></div></div>
+        <div class="sheet-row"><div>Rahul Verma</div><div>+918765…</div><div>Plan Expired</div><div><span class="sheet-status">read</span></div></div>
+        <div class="sheet-row"><div>Meena Iyer</div><div>+917012…</div><div>₹1,200</div><div style="color:var(--text3); padding-left:14px;">queued</div></div>
+      </div>
+    </div>
+
+    <div class="calc-container" id="calculator">
+      <div>
+        <h3 style="margin-bottom:12px;">Estimate the Vendor Markup Cost</h3>
+        <p style="color:var(--text2); font-size:14px; margin-bottom:24px;">Adjust the slider below to see an illustrative estimate of what a typical per-message vendor markup could cost you at different volumes. This is an estimate for illustration, not a quote from any specific provider.</p>
+
+        <label for="msg-slider">Monthly Outbound Message Volume: <span id="msg-val" style="color:var(--blue); font-weight:700;">50,000</span></label>
+        <input type="range" id="msg-slider" class="calc-slider" min="5000" max="250000" step="5000" value="50000">
+      </div>
+      <div class="calc-results">
+        <div style="font-size:12px; font-weight:600; text-transform:uppercase; color:var(--text3);">Illustrative Yearly Markup Cost</div>
+        <div class="calc-metrics" id="calc-waste">₹1,26,000</div>
+        <div class="calc-savings" id="calc-desc">Granra's BYOK model avoids this markup entirely.</div>
+        <div class="calc-caveat">Based on an illustrative ~₹0.21/message markup estimate. Actual vendor pricing varies — confirm current rates directly with any provider you're comparing.</div>
+      </div>
+    </div>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px;">
+
+      <div style="background: var(--surface2); border: 1px solid var(--border); border-radius: 16px; padding: 32px;">
+        <div style="font-size: 11px; color: var(--green); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">The BYOK Advantage</div>
+        <h4 style="font-size: 20px; font-family: 'Space Grotesk', sans-serif; margin-bottom: 12px; color: #fff;">Wholesale Pricing, Permanent Ownership</h4>
+        <p style="font-size: 14px; color: var(--text2); margin-bottom: 16px; line-height: 1.6;">
+          Traditional messaging platforms operate as toll booths—charging you an extra margin on every single notification, invoice, and appointment reminder you broadcast.
+        </p>
+        <ul style="list-style: none; font-size: 13.5px; color: var(--text2);">
+          <li style="margin-bottom: 10px; display: flex; gap: 8px;"><span style="color: var(--green);">✔</span> <strong>Direct-to-Meta Pipeline:</strong> Your application speaks straight to Meta's servers using your own developer token.</li>
+          <li style="margin-bottom: 10px; display: flex; gap: 8px;"><span style="color: var(--green);">✔</span> <strong>Zero Platform Lock-in:</strong> You retain complete legal custody of your phone numbers, verified templates, and customer text logs.</li>
+          <li style="margin-bottom: 10px; display: flex; gap: 8px;"><span style="color: var(--green);">✔</span> <strong>Scale Without Penalties:</strong> As your business grows from 5,000 to 100,000 messages, your software subscription bill stays exactly the same.</li>
+        </ul>
+      </div>
+
+      <div style="background: rgba(10,132,255,0.03); border: 1px solid rgba(10,132,255,0.15); border-radius: 16px; padding: 32px;">
+        <div style="font-size: 11px; color: var(--blue); font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">Upfront Setup Effort</div>
+        <h4 style="font-size: 20px; font-family: 'Space Grotesk', sans-serif; margin-bottom: 12px; color: #fff;">The One-Time Setup</h4>
+        <p style="font-size: 14px; color: var(--text2); margin-bottom: 16px; line-height: 1.6;">
+          To bypass vendor markups permanently, you complete a one-time registration step directly with Meta. It takes a bit of upfront effort, but it secures your long-term independence.
+        </p>
+
+        <div style="font-size: 13px; color: var(--text2);">
+          <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+            <div style="background: var(--blue); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0;">1</div>
+            <div><strong>Use a fresh phone number:</strong> A number that doesn't currently have WhatsApp on it works best. An existing number can be used, but it can no longer be used in the regular WhatsApp app afterward, and its chat history won't carry over.</div>
+          </div>
+          <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+            <div style="background: var(--blue); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0;">2</div>
+            <div><strong>Meta Developer Verification:</strong> Link your Facebook Business Suite profile and generate your direct system tokens. We provide step-by-step documentation inside our dashboard app to guide you through this process.</div>
+          </div>
+          <div style="display: flex; gap: 12px;">
+            <div style="background: var(--blue); color: #fff; border-radius: 50%; width: 22px; height: 22px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 11px; flex-shrink: 0;">3</div>
+            <div><strong>Meta Approval Wait:</strong> You can send sandbox tests immediately, but Meta typically takes anywhere from a few hours to several business days to approve production templates and verify business documents.</div>
+          </div>
+        </div>
       </div>
     </div>
   </section>
@@ -203,51 +373,99 @@
 
 <div class="wrap">
   <section id="pricing">
-    <div class="section-head">
-      <div class="eyebrow">Simple pricing</div>
-      <h2>One plan. No per-contact fees.</h2>
-      <p>You connect your own WhatsApp Business API account and pay Meta directly for messages — we charge only for the software.</p>
+    <div style="text-align: center; max-width: 580px; margin: 0 auto 40px;">
+      <div class="eyebrow">Transparent Scale Tiers</div>
+      <h2>Flat Software Access. Direct Messaging Controls.</h2>
+      <p style="color: var(--text2); font-size: 15px;">We provide the application layer, meaning you retain complete control over your budget. You carry your own API developer keys and handle Meta's wholesale message costs directly.</p>
     </div>
-    <div class="pricing-card">
-      <div style="font-size:13px;color:var(--text2);font-weight:600">Granra</div>
-      <div class="price">₹1,500<span>–₹2,000 / month</span></div>
-      <div class="note">Billed monthly · Cancel anytime</div>
-      <ul class="plist">
-        <li>Unlimited scheduled messages</li>
-        <li>Google Sheets read + write-back</li>
-        <li>Template-based sending with variables</li>
-        <li>Delivery &amp; read status tracking</li>
-        <li>Desktop app for Windows</li>
-      </ul>
-      <a class="btn" style="width:100%;justify-content:center" href="mailto:hello@example.com">Get started</a>
-    </div>
-    <div style="max-width:560px;margin:28px auto 0;background:rgba(224,92,92,0.08);border:1px solid rgba(224,92,92,0.25);border-radius:12px;padding:20px 22px">
-      <div style="font-size:13px;font-weight:600;color:#e05c5c;margin-bottom:8px">⚠️ Before you connect a number</div>
-      <div style="font-size:13.5px;color:var(--text2);line-height:1.7">
-        Use a <strong style="color:var(--text)">new phone number</strong>, not your existing WhatsApp number. Connecting a number that already has WhatsApp on it means it can no longer be used in the regular WhatsApp app afterward, and its chat history does not carry over. Also budget a few hours to a few business days for Meta's registration and business verification — don't leave this until the last minute.
+
+    <div class="pricing-layouts">
+      <div class="p-card">
+        <div class="tier-title">Monthly Access</div>
+        <div class="cost">₹1,500<span> / month</span></div>
+        <p style="font-size: 12px; color: var(--text3);">Billed monthly. Cancel anytime.</p>
+        <ul class="p-features">
+          <li>Unlimited scheduled workflows</li>
+          <li>Google Sheets &amp; Excel sync paths</li>
+          <li>Meta approved template drafting</li>
+          <li>Automated background cron runs</li>
+          <li>4 users included</li>
+        </ul>
+        <a class="btn btn-ghost" style="width: 100%; justify-content: center;" href="mailto:support@granra.com">Subscribe Monthly</a>
       </div>
+
+      <div class="p-card featured">
+        <div class="badge-featured">Introductory Offer — First 250 Only</div>
+        <div class="tier-title" style="color: var(--blue);">Introductory Offer</div>
+        <div class="cost">₹45,000<span> / 4-year pass</span></div>
+        <p style="font-size: 12.5px; color: var(--green); font-weight: 600;">Saves over ₹27,000 vs monthly renewal</p>
+        <ul class="p-features">
+          <li><strong>48 Months Platform Access</strong></li>
+          <li>Direct multi-tab sheet sync pathways</li>
+          <li>4 users included</li>
+          <li>Discounted pricing on future upgrades during your 4 years</li>
+          <li>Standard rates apply after the 4-year period ends</li>
+        </ul>
+        <a class="btn btn-green" style="width: 100%; justify-content: center;" href="mailto:support@granra.com">Secure Introductory Offer</a>
+      </div>
+
+      <div class="p-card">
+        <div class="tier-title">Annual Package</div>
+        <div class="cost">₹15,000<span> / year</span></div>
+        <p style="font-size: 12px; color: var(--text3);">Saves 16% compared to monthly billing</p>
+        <ul class="p-features">
+          <li>Unlimited scheduled workflows</li>
+          <li>Google Sheets &amp; Excel sync paths</li>
+          <li>Meta approved template drafting</li>
+          <li>Automated background cron runs</li>
+          <li>4 users included</li>
+          <li>Priority email support</li>
+        </ul>
+        <a class="btn btn-ghost" style="width: 100%; justify-content: center;" href="mailto:support@granra.com">Subscribe Annually</a>
+      </div>
+    </div>
+
+    <div style="max-width:680px; margin:40px auto 0; background:rgba(224,92,92,0.06); border:1px solid rgba(224,92,92,0.2); border-radius:12px; padding:24px;">
+      <div style="font-size:14px; font-weight:700; color:#e05c5c; margin-bottom:6px; display:flex; align-items:center; gap:6px;">⚠️ Before You Connect a Number</div>
+      <p style="font-size:13.5px; color:var(--text2); line-height:1.6;">
+        Use a <strong style="color:var(--text);">new phone number</strong>, not your existing WhatsApp number. Connecting a number that already has WhatsApp on it means it can no longer be used in the regular WhatsApp app afterward, and its chat history does not carry over. Also budget a few hours to several business days for Meta's registration and business verification — don't leave this until the last minute.
+      </p>
     </div>
   </section>
 </div>
 
 <footer>
   <div class="wrap">
-    <div class="foot-grid">
-      <div class="logo"><span class="logo-mark">G</span> Granra</div>
+    <div class="foot-wrap">
+      <div class="logo"><img src="granra-logo.png" alt="Granra" style="height:36px;"></div>
       <div class="foot-links">
         <a href="privacy-policy.html">Privacy Policy</a>
         <a href="refund-policy.html">Refund Policy</a>
         <a href="terms-of-service.html">Terms of Service</a>
-        <a href="mailto:hello@example.com">Contact</a>
       </div>
     </div>
-    <div class="foot-bottom">
-      <div>© 2026 Granra. All rights reserved.</div>
-      <div>Not affiliated with WhatsApp or Meta Platforms, Inc.</div>
+    <div style="margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; font-size: 12px; color: var(--text3);">
+      <div>© 2026 Granra Solutions. All rights reserved.</div>
+      <div>Independent utility software. Not affiliated with Meta Platforms, Inc. or WhatsApp.</div>
     </div>
   </div>
 </footer>
 
+<script>
+  // Interactive volume metric calculator — illustrative estimate only
+  const slider = document.getElementById('msg-slider');
+  const valDisplay = document.getElementById('msg-val');
+  const wasteDisplay = document.getElementById('calc-waste');
+
+  slider.addEventListener('input', function() {
+    const val = parseInt(this.value);
+    valDisplay.textContent = val.toLocaleString('en-IN');
+
+    // Illustrative estimate only — not a verified or sourced competitor rate
+    const yearlyWaste = Math.round(val * 0.21 * 12);
+    wasteDisplay.textContent = '₹' + yearlyWaste.toLocaleString('en-IN');
+  });
+</script>
+
 </body>
 </html>
-
